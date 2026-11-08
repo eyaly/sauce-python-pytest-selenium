@@ -32,10 +32,18 @@ steps:
       SAUCE_USERNAME: $(SAUCE_USERNAME)
       SAUCE_ACCESS_KEY: $(SAUCE_ACCESS_KEY)
 
-  # - task: PublishTestResults@2
-  #   condition: succeededOrFailed()
-  #   inputs:
-  #     testResultsFormat: JUnit
-  #     testResultsFiles: reports/junit.xml
-  #     testRunTitle: Sauce Demo - Sauce Labs desktop browsers
-  #   displayName: Publish test results
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: JUnit
+      testResultsFiles: reports/junit.xml
+      testRunTitle: Sauce Demo - Sauce Labs desktop browsers
+    displayName: Publish test results
+
+  # Screenshots are saved by conftest.py to reports/failures/ when a test fails
+  - task: PublishPipelineArtifact@1
+    condition: failed()
+    inputs:
+      targetPath: reports/failures
+      artifact: failure-screenshots
+    displayName: Publish failure screenshots

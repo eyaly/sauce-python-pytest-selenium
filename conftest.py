@@ -13,6 +13,8 @@ from config.capabilities import CAPABILITIES
 
 log = logging.getLogger("sauce")
 
+FAILURES_DIR = os.path.join("reports", "failures")
+
 SAUCE_REGIONS = {
     "us": {
         "hub": "https://ondemand.us-west-1.saucelabs.com/wd/hub",
@@ -140,6 +142,23 @@ def driver(request, browser_name):
     rep_call = getattr(request.node, "rep_call", None)
     passed = bool(rep_call and rep_call.passed)
     try:
+        if not passed:
+            _save_failure_screenshot(browser, request.node.name)
         browser.execute_script(f"sauce:job-result={'passed' if passed else 'failed'}")
     finally:
         browser.quit()
+
+
+def _save_failure_screenshot(browser, test_name):
+    """Save a screenshot to reports/failures/ (published by the CI pipeline as an artifact).
+
+    test_name is e.g. "test_valid_login[chrome]" -> reports/failures/test_valid_login-chrome.png
+    """
+    safe_name = test_name.replace("[", "-").replace("]", "")
+    path = os.path.join(FAILURES_DIR, f"{safe_name}.png")
+    try:
+        os.makedirs(FAILURES_DIR, exist_ok=True)
+        browser.save_screenshot(path)
+        log.info("Failure screenshot: %s", path)
+    except Exception as e:  # never let a screenshot problem hide the real test failure
+        log.warning("Could not save failure screenshot: %s", e)
