@@ -28,4 +28,4 @@ def test_missing_username(driver):
     login(driver, "")
 
     error = driver.find_element(By.CSS_SELECTOR, "[data-test='error']")
-    assert "Username is required" in error.text
+    assert "Hi you - Username is required" in error.text
