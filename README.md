@@ -18,6 +18,8 @@ Tests run against [www.saucedemo.com](https://www.saucedemo.com) on:
 
 ```
 .
+├── ci/
+│   └── sauce_summary.py    # Azure DevOps: adds a "Sauce Labs" job-link table to the run Summary page
 ├── config/
 │   └── capabilities.py     # Browser/OS capabilities (Chrome, Safari, Firefox, Edge)
 ├── tests/

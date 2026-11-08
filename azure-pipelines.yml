@@ -32,6 +32,11 @@ steps:
       SAUCE_USERNAME: $(SAUCE_USERNAME)
       SAUCE_ACCESS_KEY: $(SAUCE_ACCESS_KEY)
 
+  # Adds a "Sauce Labs" section to the run's Summary page with a job link for every test.
+  - script: python ci/sauce_summary.py reports/junit.xml
+    condition: succeededOrFailed()
+    displayName: Sauce Labs summary
+
   - task: PublishTestResults@2
     condition: succeededOrFailed()
     inputs:
