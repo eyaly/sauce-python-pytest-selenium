@@ -1,0 +1,41 @@
+# Sauce Demo - Python + Selenium tests on Sauce Labs desktop browsers (EU data center)
+# 3 test cases x 4 browsers (Chrome, Safari, Firefox, Edge) = 12 test runs, all in parallel.
+#
+# Setup (once): Pipelines > Library > + Variable group named "sauce-labs" with
+#   SAUCE_USERNAME     your Sauce Labs username
+#   SAUCE_ACCESS_KEY   your access key (click the lock icon to make it secret)
+
+trigger:
+  - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - group: sauce-labs
+  - name: PARALLEL_SESSIONS
+    value: 12
+
+steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: "3.12"
+    displayName: Use Python 3.12
+
+  - script: pip install -r requirements.txt
+    displayName: Install dependencies
+
+  - script: pytest -n $(PARALLEL_SESSIONS)
+    displayName: Run tests on Sauce Labs desktop browsers
+    env:
+      # Secret variables are not exposed to scripts automatically; map them explicitly.
+      SAUCE_USERNAME: $(SAUCE_USERNAME)
+      SAUCE_ACCESS_KEY: $(SAUCE_ACCESS_KEY)
+
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: JUnit
+      testResultsFiles: reports/junit.xml
+      testRunTitle: Sauce Demo - Sauce Labs desktop browsers
+    displayName: Publish test results
