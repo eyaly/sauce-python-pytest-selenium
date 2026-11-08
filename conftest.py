@@ -144,9 +144,26 @@ def driver(request, browser_name):
     try:
         if not passed:
             _save_failure_screenshot(browser, request.node.name)
+            # Show the failure reason in the Sauce Labs job's command list
+            reason = _failure_reason(rep_call or getattr(request.node, "rep_setup", None))
+            browser.execute_script(f"sauce:context=Test failed: {reason}")
         browser.execute_script(f"sauce:job-result={'passed' if passed else 'failed'}")
     finally:
         browser.quit()
+
+
+def _failure_reason(report, max_length=500):
+    """One-line failure reason from a pytest report, e.g. "AssertionError: assert 'x' in 'y'"."""
+    if report is None:
+        return "unknown reason"
+    crash = getattr(report.longrepr, "reprcrash", None)
+    message = crash.message if crash is not None else str(report.longrepr or "unknown reason")
+    # Skip the "Sauce Labs job: <url>" line that pytest_runtest_makereport adds, and keep only
+    # the first line of the error (pytest's "+ where ..." explanation lines follow it)
+    lines = [line.strip() for line in message.splitlines()
+             if line.strip() and not line.startswith("Sauce Labs job:")]
+    reason = lines[0] if lines else "unknown reason"
+    return reason if len(reason) <= max_length else reason[: max_length - 3] + "..."
 
 
 def _save_failure_screenshot(browser, test_name):
